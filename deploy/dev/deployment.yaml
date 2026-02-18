@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dashboard
+  namespace: dashboard-dev
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dashboard
+  template:
+    metadata:
+      labels:
+        app: dashboard
+    spec:
+      containers:
+        - name: dashboard
+          image: fcavarzare/dashboard-k8s:1fa2e077924d80ba203b5d6560e305b5b2ab4a3c
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080

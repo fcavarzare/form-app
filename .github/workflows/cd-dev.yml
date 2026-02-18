@@ -1,0 +1,38 @@
+name: cd-dashboard-dev
+
+on:
+  workflow_run:
+    workflows: ["ci-dashboard"]
+    types: [completed]
+
+permissions:
+  contents: write
+
+env:
+  IMAGE_NAME: fcavarzare/dashboard-k8s
+
+jobs:
+  deploy_dev:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Update DEV deployment image (auto SHA)
+        run: |
+          set -e
+          SHA="${{ github.event.workflow_run.head_sha }}"
+          sed -i "s|image: .*|image: ${{ env.IMAGE_NAME }}:${SHA}|g" deploy/dev/deployment.yaml
+
+      - name: Commit and push DEV manifest
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add deploy/dev/deployment.yaml
+          git commit -m "chore(dev): update image to ${{ github.event.workflow_run.head_sha }}" || exit 0
+          git pull --rebase origin main
+          git push

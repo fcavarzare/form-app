@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dashboard-qa
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/fcavarzare/dashboard.git
+    targetRevision: main
+    path: deploy/qa
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dashboard-qa
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

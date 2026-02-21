@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: dashboard
-  namespace: dashboard-qa
+  name: form-app
+  namespace: form-app-qa
 spec:
-  type: ClusterIP
   selector:
-    app: dashboard
+    app: form-app
+  type: ClusterIP
   ports:
     - name: http
-      port: 8080
-      targetPort: 8080
+      port: 80
+      targetPort: 8000
       

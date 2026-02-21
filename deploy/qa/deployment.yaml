@@ -1,21 +1,42 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dashboard
-  namespace: dashboard-qa
+  name: form-app
+  namespace: form-app-qa
 spec:
-  replicas: 4
+  replicas: 1
   selector:
     matchLabels:
-      app: dashboard
+      app: form-app
   template:
     metadata:
       labels:
-        app: dashboard
+        app: form-app
     spec:
       containers:
-        - name: dashboard
-          image: fcavarzare/dashboard-k8s:c989092f2f043a6b5a914951641105167f767064
+        - name: form-app
+          image: fcavarzare/form-app:latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 8080
+            - containerPort: 8000
+          env:
+            - name: DB_SERVER
+              valueFrom:
+                secretKeyRef:
+                  name: form-app-db
+                  key: DB_SERVER
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: form-app-db
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: form-app-db
+                  key: DB_PASSWORD
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: form-app-db
+                  key: DB_NAME

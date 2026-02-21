@@ -1,0 +1,40 @@
+name: ci-dashboard
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "src/**"
+      - ".github/workflows/**"
+
+permissions:
+  contents: read
+
+env:
+  IMAGE_NAME: fcavarzare/dashboard-k8s
+
+jobs:
+  build_push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build & Push image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./src
+          file: ./src/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.IMAGE_NAME }}:latest

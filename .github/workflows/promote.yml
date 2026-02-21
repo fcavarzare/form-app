@@ -1,46 +1,129 @@
-name: promote-dev-to-qa
+name: promote
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Ambiente destino (dev|qa|prod)"
+        required: true
+        type: choice
+        options:
+          - dev
+          - qa
+          - prod
+      image_tag:
+        description: "Tag da imagem (ex: SHA do commit). Se vazio, usa GITHUB_SHA."
+        required: false
+        type: string
 
 permissions:
   contents: write
 
+env:
+  IMAGE_NAME: fcavarzare/form-app
+  DEV_MANIFEST: deploy/dev/deployment.yaml
+  QA_MANIFEST: deploy/qa/deployment.yaml
+  PROD_MANIFEST: deploy/prod/deployment.yaml
+
 jobs:
   promote:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Read image from DEV and apply to QA
+      - name: Decide tag e arquivo alvo
+        id: vars
         shell: bash
         run: |
-          set -euo pipefail
+          set -e
 
-          DEV_FILE="deploy/dev/deployment.yaml"
-          QA_FILE="deploy/qa/deployment.yaml"
+          ENV_INPUT="${{ inputs.environment }}"
+          TAG_INPUT="${{ inputs.image_tag }}"
 
-          # pega a primeira ocorrência de "image:" do dev (assumindo 1 container)
-          IMAGE="$(grep -m1 '^[[:space:]]*image:' "$DEV_FILE" | awk '{print $2}')"
+          if [ -z "$TAG_INPUT" ]; then
+            TAG_INPUT="${GITHUB_SHA}"
+          fi
 
-          if [ -z "${IMAGE}" ]; then
-            echo "ERROR: Could not find image in ${DEV_FILE}"
+          case "$ENV_INPUT" in
+            dev)
+              FILE="${DEV_MANIFEST}"
+              ;;
+            qa)
+              FILE="${QA_MANIFEST}"
+              ;;
+            prod)
+              FILE="${PROD_MANIFEST}"
+              ;;
+            *)
+              echo "Ambiente inválido: $ENV_INPUT"
+              exit 1
+              ;;
+          esac
+
+          echo "env_name=$ENV_INPUT" >> $GITHUB_OUTPUT
+          echo "image_tag=$TAG_INPUT" >> $GITHUB_OUTPUT
+          echo "manifest_file=$FILE" >> $GITHUB_OUTPUT
+
+          echo "Promovendo para: $ENV_INPUT"
+          echo "Tag: $TAG_INPUT"
+          echo "Manifest: $FILE"
+
+      - name: Verifica arquivo existe
+        shell: bash
+        run: |
+          set -e
+          FILE="${{ steps.vars.outputs.manifest_file }}"
+          if [ ! -f "$FILE" ]; then
+            echo "ERRO: Manifest não encontrado: $FILE"
+            echo "Ajuste DEV_MANIFEST/QA_MANIFEST/PROD_MANIFEST no workflow."
             exit 1
           fi
 
-          echo "Promoting image to QA: ${IMAGE}"
-
-          # substitui a linha image: no QA
-          sed -i "s|^[[:space:]]*image:.*|          image: ${IMAGE}|g" "$QA_FILE"
-
-      - name: Commit & push QA promotion
+      - name: Atualiza image no manifest (remove latest e coloca SHA)
         shell: bash
         run: |
-          set -euo pipefail
+          set -e
+          FILE="${{ steps.vars.outputs.manifest_file }}"
+          TAG="${{ steps.vars.outputs.image_tag }}"
+          IMG="${{ env.IMAGE_NAME }}"
+
+          # Regras:
+          # 1) Se existir linha "image: fcavarzare/form-app:<qualquer>", substitui pela tag nova
+          # 2) Se não existir, falha (pra não "achar" errado)
+          if grep -qE "^\s*image:\s*${IMG}:" "$FILE"; then
+            sed -i -E "s|^(\s*image:\s*)${IMG}:[^[:space:]]+|\1${IMG}:${TAG}|g" "$FILE"
+          else
+            echo "ERRO: Não encontrei linha 'image: ${IMG}:...' em $FILE"
+            echo "Abra o deployment.yaml e garanta que existe algo como:"
+            echo "image: ${IMG}:latest"
+            exit 1
+          fi
+
+          echo "OK. Manifest atualizado:"
+          grep -nE "^\s*image:\s*${IMG}:" "$FILE" || true
+
+      - name: Commit & Push
+        shell: bash
+        run: |
+          set -e
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add deploy/qa/deployment.yaml
-          git commit -m "Build da mesma imagem do DEV" || exit 0
-          git pull --rebase origin main
-          git push
+
+          FILE="${{ steps.vars.outputs.manifest_file }}"
+          ENV_NAME="${{ steps.vars.outputs.env_name }}"
+          TAG="${{ steps.vars.outputs.image_tag }}"
+
+          git add "$FILE"
+
+          # Evita falhar se não houver mudança
+          if git diff --cached --quiet; then
+            echo "Sem mudanças para commitar."
+            exit 0
+          fi
+
+          git commit -m "Promote ${ENV_NAME} -> ${TAG}"
+          git push origin HEAD:main

@@ -2,36 +2,23 @@ name: cd-form-app-qa
 
 on:
   push:
-    branches: ["qa"]
+    branches: ["main"]
+    paths:
+      - "qa/**"
+  workflow_dispatch: {}
 
 permissions:
-  contents: write
-
-env:
-  IMAGE_NAME: fcavarzare/form-app
+  contents: read
 
 jobs:
   deploy_qa:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout qa
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: qa
 
-      - name: Update QA deployment image (auto SHA)
+      - name: Show QA image (debug)
+        shell: bash
         run: |
-          set -e
-          SHA="${{ github.sha }}"
-          sed -i "s|image: .*|image: ${{ env.IMAGE_NAME }}:${SHA}|g" deploy/qa/deployment.yaml
-
-      - name: Commit and push QA manifest
-        run: |
-          set -e
-          SHA="${{ github.sha }}"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add deploy/qa/deployment.yaml
-          git commit -m "chore(qa): update image to ${SHA}" || exit 0
-          git pull --rebase origin qa
-          git push
+          echo "QA deployment image:"
+          awk '$1=="image:"{print; exit}' qa/deployment.yaml

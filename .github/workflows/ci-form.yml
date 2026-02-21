@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 env:
-  IMAGE_NAME: fcavarzare/dashboard-k8s
+  IMAGE_NAME: fcavarzare/form-app
 
 jobs:
   build_push:

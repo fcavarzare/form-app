@@ -23,28 +23,22 @@ jobs:
           DEV_FILE="deploy/dev/deployment.yaml"
           QA_FILE="deploy/qa/deployment.yaml"
 
-          echo "DEV file: $DEV_FILE"
-          echo "QA  file: $QA_FILE"
-          ls -la deploy/dev || true
-          ls -la deploy/qa || true
-
           [[ -f "$DEV_FILE" ]] || { echo "ERROR: missing $DEV_FILE"; exit 1; }
           [[ -f "$QA_FILE" ]] || { echo "ERROR: missing $QA_FILE"; exit 1; }
 
           DEV_IMAGE="$(awk '$1=="image:"{print $2; exit}' "$DEV_FILE")"
-          QA_IMAGE_BEFORE="$(awk '$1=="image:"{print $2; exit}' "$QA_FILE")"
+          QA_BEFORE="$(awk '$1=="image:"{print $2; exit}' "$QA_FILE")"
 
           echo "DEV image: $DEV_IMAGE"
-          echo "QA  image before: $QA_IMAGE_BEFORE"
+          echo "QA  before: $QA_BEFORE"
 
           [[ -n "${DEV_IMAGE:-}" ]] || { echo "ERROR: DEV image not found"; exit 1; }
 
           if [[ "$DEV_IMAGE" == *":latest" || "$DEV_IMAGE" == *":CHANGE_ME" ]]; then
-            echo "ERROR: DEV must be a SHA tag to promote. Current DEV_IMAGE=$DEV_IMAGE"
+            echo "ERROR: DEV must be a SHA tag to promote. Current: $DEV_IMAGE"
             exit 1
           fi
 
-          # troca a primeira ocorrência de image: no QA preservando indentação
           awk -v new_image="$DEV_IMAGE" '
             BEGIN{done=0}
             {
@@ -57,10 +51,10 @@ jobs:
             }
           ' "$QA_FILE" > "$QA_FILE.tmp" && mv "$QA_FILE.tmp" "$QA_FILE"
 
-          QA_IMAGE_AFTER="$(awk '$1=="image:"{print $2; exit}' "$QA_FILE")"
-          echo "QA  image after:  $QA_IMAGE_AFTER"
+          QA_AFTER="$(awk '$1=="image:"{print $2; exit}' "$QA_FILE")"
+          echo "QA  after:  $QA_AFTER"
 
-      - name: Commit & push
+      - name: Commit & push QA promotion
         shell: bash
         run: |
           set -euo pipefail

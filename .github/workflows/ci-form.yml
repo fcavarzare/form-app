@@ -14,10 +14,9 @@ env:
   IMAGE_NAME: fcavarzare/form-app
 
 jobs:
-  build_push_and_bump_dev:
+  build_push_and_update_dev:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -43,7 +42,7 @@ jobs:
             ${{ env.IMAGE_NAME }}:${{ github.sha }}
             ${{ env.IMAGE_NAME }}:latest
 
-      - name: Update DEV manifest to new image SHA
+      - name: Update DEV manifest to SHA
         shell: bash
         run: |
           set -euo pipefail
@@ -52,7 +51,6 @@ jobs:
 
           [[ -f "$DEV_FILE" ]] || { echo "ERROR: $DEV_FILE not found"; exit 1; }
 
-          # troca a PRIMEIRA ocorrência de image: preservando indentação
           awk -v new_image="$NEW_IMAGE" '
             BEGIN{done=0}
             {
@@ -61,17 +59,14 @@ jobs:
                 indent=substr($0, RSTART, RLENGTH)
                 print indent "image: " new_image
                 done=1
-              } else {
-                print
-              }
+              } else print
             }
-          ' "$DEV_FILE" > "$DEV_FILE.tmp"
-          mv "$DEV_FILE.tmp" "$DEV_FILE"
+          ' "$DEV_FILE" > "$DEV_FILE.tmp" && mv "$DEV_FILE.tmp" "$DEV_FILE"
 
           echo "DEV image now:"
           awk '$1=="image:"{print; exit}' "$DEV_FILE"
 
-      - name: Commit & push DEV manifest update
+      - name: Commit & push DEV update
         shell: bash
         run: |
           set -euo pipefail
@@ -79,12 +74,11 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git add deploy/dev/deployment.yaml
-
           if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
           fi
 
-          git commit -m "chore(dev): apply image ${GITHUB_SHA} [skip ci]"
+          git commit -m "chore(dev): set image ${GITHUB_SHA} [skip ci]"
           git pull --rebase origin main
           git push origin HEAD:main

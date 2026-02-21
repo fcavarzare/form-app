@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/fcavarzare/FORM-APP.git
-    targetRevision: qa
+    targetRevision: main
     path: deploy/qa
   destination:
     server: https://kubernetes.default.svc

@@ -21,4 +21,4 @@ jobs:
         shell: bash
         run: |
           echo "QA deployment image:"
-          awk '$1=="image:"{print; exit}' qa/deployment.yaml
+          awk '$1=="image:"{print; exit}' deploy/qa/deployment.yaml

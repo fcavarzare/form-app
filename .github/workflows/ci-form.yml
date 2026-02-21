@@ -1,20 +1,21 @@
-name: ci-dashboard
+name: ci-form-app
 
 on:
   push:
     branches: ["main"]
     paths:
       - "src/**"
+      - "deploy/**"
       - ".github/workflows/**"
 
 permissions:
-  contents: read
+  contents: write
 
 env:
   IMAGE_NAME: fcavarzare/form-app
 
 jobs:
-  build_push:
+  build_push_and_bump_dev:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -38,3 +39,34 @@ jobs:
           tags: |
             ${{ env.IMAGE_NAME }}:${{ github.sha }}
             ${{ env.IMAGE_NAME }}:latest
+
+      - name: Update DEV manifest to new image SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          DEV_FILE="deploy/dev/deployment.yaml"
+          NEW_IMAGE="${IMAGE_NAME}:${GITHUB_SHA}"
+
+          if [ ! -f "$DEV_FILE" ]; then
+            echo "ERROR: $DEV_FILE not found"
+            exit 1
+          fi
+
+          # substitui a linha image: ... (assumindo 1 container)
+          sed -i "s|^[[:space:]]*image:.*|          image: ${NEW_IMAGE}|g" "$DEV_FILE"
+
+          echo "Updated $DEV_FILE to:"
+          grep -n "image:" "$DEV_FILE" | head -n 3
+
+      - name: Commit & push DEV manifest update
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add deploy/dev/deployment.yaml
+          git commit -m "chore(dev): bump image to ${GITHUB_SHA}" || exit 0
+
+          git pull --rebase origin main
+          git push origin main

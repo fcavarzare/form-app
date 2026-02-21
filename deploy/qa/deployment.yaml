@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
         - name: form-app
-          image: fcavarzare/form-app:latest
-          imagePullPolicy: Always
+          image: fcavarzare/form-app:CHANGE_ME
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
           env:

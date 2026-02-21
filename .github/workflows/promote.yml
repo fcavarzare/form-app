@@ -1,4 +1,4 @@
-name: PROMOVE-IMG-DEV-PARA-QA
+name: promote-dev-to-qa
 
 on:
   workflow_dispatch: {}
@@ -12,8 +12,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Read image from DEV and apply to QA
+      - name: Promote DEV image (SHA) to QA
         shell: bash
         run: |
           set -euo pipefail
@@ -21,18 +23,39 @@ jobs:
           DEV_FILE="deploy/dev/deployment.yaml"
           QA_FILE="deploy/qa/deployment.yaml"
 
-          # pega a primeira ocorrência de "image:" do dev (assumindo 1 container)
-          IMAGE="$(grep -m1 '^[[:space:]]*image:' "$DEV_FILE" | awk '{print $2}')"
+          [[ -f "$DEV_FILE" ]] || { echo "ERROR: missing $DEV_FILE"; exit 1; }
+          [[ -f "$QA_FILE" ]] || { echo "ERROR: missing $QA_FILE"; exit 1; }
 
-          if [ -z "${IMAGE}" ]; then
-            echo "ERROR: Could not find image in ${DEV_FILE}"
+          DEV_IMAGE="$(awk '$1=="image:"{print $2; exit}' "$DEV_FILE")"
+          [[ -n "${DEV_IMAGE:-}" ]] || { echo "ERROR: could not find image: in $DEV_FILE"; exit 1; }
+
+          # não aceita latest
+          if [[ "$DEV_IMAGE" == *":latest" ]]; then
+            echo "ERROR: DEV is using :latest. DEV must point to SHA to promote."
+            echo "DEV_IMAGE=$DEV_IMAGE"
             exit 1
           fi
 
-          echo "Promoting image to QA: ${IMAGE}"
+          echo "Promoting to QA: $DEV_IMAGE"
 
-          # substitui a linha image: no QA
-          sed -i "s|^[[:space:]]*image:.*|          image: ${IMAGE}|g" "$QA_FILE"
+          # troca a PRIMEIRA ocorrência de image: no QA preservando indentação
+          awk -v new_image="$DEV_IMAGE" '
+            BEGIN{done=0}
+            {
+              if(!done && $1=="image:"){
+                match($0, /^[[:space:]]*/)
+                indent=substr($0, RSTART, RLENGTH)
+                print indent "image: " new_image
+                done=1
+              } else {
+                print
+              }
+            }
+          ' "$QA_FILE" > "$QA_FILE.tmp"
+          mv "$QA_FILE.tmp" "$QA_FILE"
+
+          echo "QA image now:"
+          awk '$1=="image:"{print; exit}' "$QA_FILE"
 
       - name: Commit & push QA promotion
         shell: bash
@@ -40,7 +63,14 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
           git add deploy/qa/deployment.yaml
-          git commit -m "chore(qa): promote same image as dev" || exit 0
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git commit -m "chore(qa): promote same image as dev [skip ci]"
           git pull --rebase origin main
-          git push
+          git push origin HEAD:main

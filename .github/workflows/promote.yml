@@ -41,6 +41,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add deploy/qa/deployment.yaml
-          git commit -m "chore(qa): promote same image as dev" || exit 0
+          git commit -m "Build da mesma imagem do DEV" || exit 0
           git pull --rebase origin main
           git push

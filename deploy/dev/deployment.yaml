@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: form-app
-          image: fcavarzare/form-app:34e0375dc8a2270cbf866b6d02f0e650d96ac08c
+          image: fcavarzare/form-app:9b2eb40fa01e0eca2f4aa8d4404b066bef54455e
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000

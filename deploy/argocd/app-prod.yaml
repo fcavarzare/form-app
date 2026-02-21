@@ -1,17 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: dashboard-prod
+  name: form-app-prod
   namespace: argocd
 spec:
   project: default
   source:
-    repoURL: https://github.com/fcavarzare/dashboard.git
-    targetRevision: main
+    repoURL: https://github.com/fcavarzare/FORM-APP.git
+    targetRevision: prod
     path: deploy/prod
   destination:
     server: https://kubernetes.default.svc
-    namespace: dashboard-prod
+    namespace: form-app-prod
   syncPolicy:
     automated:
       prune: true

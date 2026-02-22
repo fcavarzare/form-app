@@ -61,8 +61,5 @@ spec:
               port: 8000
             initialDelaySeconds: 20
             periodSeconds: 20
-<<<<<<< HEAD
             timeoutSeconds: 2
             failureThreshold: 3
-=======
->>>>>>> f4b2657fbd4739ddcf280c7e7aebbae5ccfcbf58

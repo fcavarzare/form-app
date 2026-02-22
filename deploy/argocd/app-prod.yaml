@@ -12,6 +12,15 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: form-app-prod
+
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: form-app
+      namespace: form-prod-dev
+      jsonPointers:
+        - /spec/replicas
+  
   syncPolicy:
     automated:
       prune: true

@@ -2,14 +2,14 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: form-app-hpa
-  namespace: form-app-dev
+  namespace: form-app-qa
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
     name: form-app
   minReplicas: 2
-  maxReplicas: 3
+  maxReplicas: 5
   metrics:
   - type: Resource
     resource:

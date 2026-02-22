@@ -9,7 +9,7 @@ spec:
     kind: Deployment
     name: form-app
   minReplicas: 2
-  maxReplicas: 20
+  maxReplicas: 8
   metrics:
   - type: Resource
     resource:

@@ -46,3 +46,15 @@ spec:
                 secretKeyRef:
                   name: form-app-db
                   key: DB_NAME
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 20

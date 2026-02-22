@@ -17,7 +17,7 @@ spec:
     - group: apps
       kind: Deployment
       name: form-app
-      namespace: form-prod-dev
+      namespace: form-app-prod
       jsonPointers:
         - /spec/replicas
   

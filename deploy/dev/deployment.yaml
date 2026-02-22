@@ -48,14 +48,16 @@ spec:
                   key: DB_NAME
           readinessProbe:
             httpGet:
-              path: /
+              path: /readyz
               port: 8000
             initialDelaySeconds: 5
             periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+
           livenessProbe:
             httpGet:
-              path: /
+              path: /healthz
               port: 8000
             initialDelaySeconds: 20
             periodSeconds: 20
-            

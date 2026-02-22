@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: form-app
-          image: fcavarzare/form-app:e0795fe2156e59d740c465728e942daea7bc1613
+          image: fcavarzare/form-app:cd7067b254c71587d09e34495376a5f6b5a63b02
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
@@ -61,5 +61,8 @@ spec:
               port: 8000
             initialDelaySeconds: 20
             periodSeconds: 20
+<<<<<<< HEAD
             timeoutSeconds: 2
             failureThreshold: 3
+=======
+>>>>>>> f4b2657fbd4739ddcf280c7e7aebbae5ccfcbf58

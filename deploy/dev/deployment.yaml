@@ -2,8 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: form-app
-  namespace: form-app-dev
+  namespace: form-app-prod
 spec:
+  selector:
     matchLabels:
       app: form-app
   template:
@@ -23,6 +24,7 @@ spec:
               memory: "128Mi"
             limits:
               cpu: "500m"
+              memory: "256Mi"
           env:
             - name: DB_SERVER
               valueFrom:
@@ -52,7 +54,6 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 2
             failureThreshold: 3
-
           livenessProbe:
             httpGet:
               path: /healthz

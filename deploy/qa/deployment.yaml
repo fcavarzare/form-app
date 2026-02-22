@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: form-app
-  namespace: form-app-qa
+  namespace: form-app-prod
 spec:
   selector:
     matchLabels:
@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: form-app
-          image: fcavarzare/form-app:cd7067b254c71587d09e34495376a5f6b5a63b02
+          image: fcavarzare/form-app:e0795fe2156e59d740c465728e942daea7bc1613
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
@@ -24,6 +24,7 @@ spec:
               memory: "128Mi"
             limits:
               cpu: "500m"
+              memory: "256Mi"
           env:
             - name: DB_SERVER
               valueFrom:
@@ -53,7 +54,6 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 2
             failureThreshold: 3
-
           livenessProbe:
             httpGet:
               path: /healthz

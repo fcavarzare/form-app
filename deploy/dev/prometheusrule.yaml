@@ -3,6 +3,8 @@ kind: PrometheusRule
 metadata:
   name: form-app-dev-alerts
   namespace: monitoring
+  labels:
+    release: kps
 spec:
   groups:
   - name: form-app.dev.rules

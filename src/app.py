@@ -5,6 +5,7 @@ from fastapi import FastAPI, Form, Request, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
+# v1.0.1 - Ajuste de resiliência e segurança
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
@@ -37,6 +38,7 @@ def get_conn(timeout: int = 5) -> pymssql.Connection:
 # Liveness: só garante que o processo está vivo (NÃO depende do DB)
 @app.get("/healthz")
 def healthz():
+    print("Healthcheck requested")
     return {"status": "ok"}
 
 

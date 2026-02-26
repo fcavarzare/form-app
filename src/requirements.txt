@@ -3,4 +3,5 @@ uvicorn
 pymssql
 python-multipart
 jinja2
+prometheus-fastapi-instrumentator
 

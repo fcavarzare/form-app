@@ -1,0 +1,54 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: form-app
+  namespace: form-app-prod
+  labels:
+    release: kps
+    app: form-app
+spec:
+  selector:
+    matchLabels:
+      app: form-app
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: form-app-prod-alerts
+  namespace: monitoring
+  labels:
+    release: kps
+spec:
+  groups:
+  - name: form-app.prod.rules
+    rules:
+    - alert: FormAppProdHighCpu
+      expr: |
+        sum by (pod) (
+          rate(container_cpu_usage_seconds_total{namespace="form-app-prod", container="form-app"}[5m])
+        ) > 0.50
+      for: 3m
+      labels:
+        severity: warning
+    - alert: FormAppProdHighMemory
+      expr: |
+        container_memory_working_set_bytes{namespace="form-app-prod", container="form-app"} > 500 * 1024 * 1024
+      for: 3m
+      labels:
+        severity: warning
+    - alert: FormAppProdRestarting
+      expr: |
+        increase(kube_pod_container_status_restarts_total{namespace="form-app-prod", container="form-app"}[10m]) > 1
+      for: 1m
+      labels:
+        severity: warning
+    - alert: FormAppProdNotReady
+      expr: |
+        kube_pod_status_ready{namespace="form-app-prod", condition="true"} == 0
+      for: 2m
+      labels:
+        severity: critical

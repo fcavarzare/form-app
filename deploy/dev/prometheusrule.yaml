@@ -1,4 +1,21 @@
 apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: form-app
+  namespace: form-app-dev
+  labels:
+    release: kps
+    app: form-app
+spec:
+  selector:
+    matchLabels:
+      app: form-app
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   name: form-app-dev-alerts
@@ -9,69 +26,32 @@ spec:
   groups:
   - name: form-app.dev.rules
     rules:
-
-    # 1️⃣ CPU alta sustentada
     - alert: FormAppDevHighCpu
       expr: |
         sum by (pod) (
-          rate(container_cpu_usage_seconds_total{
-            namespace="form-app-dev",
-            container="form-app"
-          }[5m])
+          rate(container_cpu_usage_seconds_total{namespace="form-app-dev", container="form-app"}[5m])
         ) > 0.20
       for: 3m
       labels:
         severity: warning
-        app: form-app
-        env: dev
       annotations:
-        summary: "form-app DEV com CPU alta"
-        description: "Pod {{ $labels.pod }} usando CPU > 200m por 3m"
-
-    # 2️⃣ Memória alta
+        summary: "CPU alta em DEV"
+        description: "Pod {{ $labels.pod }} usando > 200m de CPU"
     - alert: FormAppDevHighMemory
       expr: |
-        container_memory_working_set_bytes{
-          namespace="form-app-dev",
-          container="form-app"
-        } > 300 * 1024 * 1024
+        container_memory_working_set_bytes{namespace="form-app-dev", container="form-app"} > 300 * 1024 * 1024
       for: 3m
       labels:
         severity: warning
-        app: form-app
-        env: dev
-      annotations:
-        summary: "form-app DEV com memória alta"
-        description: "Pod {{ $labels.pod }} usando > 300Mi de memória"
-
-    # 3️⃣ Pod reiniciando
     - alert: FormAppDevRestarting
       expr: |
-        increase(kube_pod_container_status_restarts_total{
-          namespace="form-app-dev",
-          container="form-app"
-        }[10m]) > 1
+        increase(kube_pod_container_status_restarts_total{namespace="form-app-dev", container="form-app"}[10m]) > 1
       for: 1m
       labels:
         severity: warning
-        app: form-app
-        env: dev
-      annotations:
-        summary: "form-app DEV reiniciando"
-        description: "Pod {{ $labels.pod }} reiniciou mais de 1x em 10m"
-
-    # 4️⃣ Pod não Ready
     - alert: FormAppDevNotReady
       expr: |
-        kube_pod_status_ready{
-          namespace="form-app-dev",
-          condition="true"
-        } == 0
+        kube_pod_status_ready{namespace="form-app-dev", condition="true"} == 0
       for: 2m
       labels:
         severity: critical
-        app: form-app
-        env: dev
-      annotations:
-        summary: "form-app DEV não Ready"
-        description: "Pod {{ $labels.pod }} não está Ready"

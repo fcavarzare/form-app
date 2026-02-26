@@ -7,6 +7,7 @@ from fastapi.templating import Jinja2Templates
 
 # v1.0.1 - Ajuste de resiliência e segurança
 app = FastAPI()
+Instrumentator().instrument(app).expose(app)
 templates = Jinja2Templates(directory="templates")
 
 DB_SERVER = os.getenv("DB_SERVER", "mssql")

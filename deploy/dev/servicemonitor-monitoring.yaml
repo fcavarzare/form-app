@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: form-app-dev
+  namespace: monitoring
+  labels:
+    release: kps
+    app: form-app
+spec:
+  namespaceSelector:
+    matchNames:
+    - form-app-dev
+  selector:
+    matchLabels:
+      app: form-app
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s

@@ -1,0 +1,44 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: form-app-allow-ingress-and-monitoring
+  namespace: form-app-dev
+spec:
+  podSelector:
+    matchLabels:
+      app: form-app
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Permite tráfego do Ingress Controller (Nginx)
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: ingress-nginx
+  # Permite tráfego do Prometheus para coleta de métricas
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: monitoring
+    ports:
+    - protocol: TCP
+      port: 8000
+  egress:
+  # Permite consultas DNS ao CoreDNS do cluster
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  # Permite conexão com o IP do Banco de Dados Externo
+  - to:
+    - ipBlock:
+        cidr: 100.100.100.104/32
+    ports:
+    - protocol: TCP
+      port: 1433

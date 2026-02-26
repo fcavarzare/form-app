@@ -34,9 +34,17 @@ spec:
       for: 3m
       labels:
         severity: warning
+    - alert: FormAppDevHighLatency
+      expr: |
+        histogram_quantile(0.90, sum by (le) (
+          rate(http_request_duration_seconds_bucket{namespace="form-app-dev"}[5m])
+        )) > 1.0
+      for: 2m
+      labels:
+        severity: warning
       annotations:
-        summary: "CPU alta em DEV"
-        description: "Pod {{ $labels.pod }} usando > 200m de CPU"
+        summary: "Aplicação lenta em DEV"
+        description: "90% das requisições em DEV estão demorando mais de 1s"
     - alert: FormAppDevHighMemory
       expr: |
         container_memory_working_set_bytes{namespace="form-app-dev", container="form-app"} > 300 * 1024 * 1024

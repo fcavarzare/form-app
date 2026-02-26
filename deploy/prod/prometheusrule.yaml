@@ -34,6 +34,17 @@ spec:
       for: 3m
       labels:
         severity: warning
+    - alert: FormAppProdHighLatency
+      expr: |
+        histogram_quantile(0.90, sum by (le) (
+          rate(http_request_duration_seconds_bucket{namespace="form-app-prod"}[5m])
+        )) > 0.5
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Aplicação LENTA em PRODUÇÃO"
+        description: "Alerta Crítico: 90% das requisições em PROD estão demorando mais de 0.5s"
     - alert: FormAppProdHighMemory
       expr: |
         container_memory_working_set_bytes{namespace="form-app-prod", container="form-app"} > 500 * 1024 * 1024

@@ -1,5 +1,6 @@
 import os
 import pymssql
+import time
 
 from fastapi import FastAPI, Form, Request, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -42,6 +43,13 @@ def get_conn(timeout: int = 5) -> pymssql.Connection:
 def healthz():
     print("Healthcheck requested")
     return {"status": "ok"}
+
+
+@app.get("/stress")
+def stress():
+    # Simula uma operação pesada de 1.1 segundos
+    time.sleep(1.1)
+    return {"status": "stressed"}
 
 
 # Readiness: garante que a app consegue falar com o SQL

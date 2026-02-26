@@ -5,9 +5,9 @@ metadata:
   namespace: form-app-qa
 spec:
   hard:
-    requests.cpu: "500m"
+    requests.cpu: "1000m"
     requests.memory: "512Mi"
-    limits.cpu: "1000m"
+    limits.cpu: "2000m"
     limits.memory: "1024Mi"
     pods: "10"
 ---

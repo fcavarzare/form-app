@@ -26,7 +26,7 @@ spec:
               topologyKey: "kubernetes.io/hostname"
       containers:
         - name: form-app
-          image: fcavarzare/form-app:f7f33b58d21f1e05deb8a405ef355f75e4195373
+          image: fcavarzare/form-app:d692664fd201a3a89e723d6f9c6e3c668b57cdc7
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000

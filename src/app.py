@@ -4,6 +4,7 @@ import pymssql
 from fastapi import FastAPI, Form, Request, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
+from prometheus_fastapi_instrumentator import Instrumentator
 
 # v1.0.1 - Ajuste de resiliência e segurança
 app = FastAPI()

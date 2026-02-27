@@ -97,42 +97,40 @@ jobs:
             exit 0
           fi
 
-                    git commit -m "chore(dev): set image ${GITHUB_SHA} [skip ci]"
-                    git pull --rebase origin main
-                    git push origin HEAD:main
+          git commit -m "chore(dev): set image ${GITHUB_SHA} [skip ci]"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Auto-Promote to QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          QA_FILE="deploy/qa/deployment.yaml"
+          NEW_IMAGE="${IMAGE_NAME}:${GITHUB_SHA}"
+
+          echo "Promoting ${NEW_IMAGE} to QA..."
+
+          awk -v new_image="$NEW_IMAGE" '
+            BEGIN{done=0}
+            {
+              if(!done && $1=="image:"){
+                match($0, /^[[:space:]]*/)
+                indent=substr($0, RSTART, RLENGTH)
+                print indent "image: " new_image
+                done=1
+              } else print
+            }
+          ' "$QA_FILE" > "$QA_FILE.tmp" && mv "$QA_FILE.tmp" "$QA_FILE"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add deploy/qa/deployment.yaml
           
-                - name: Auto-Promote to QA
-                  shell: bash
-                  run: |
-                    set -euo pipefail
-                    DEV_FILE="deploy/dev/deployment.yaml"
-                    QA_FILE="deploy/qa/deployment.yaml"
-                    NEW_IMAGE="${IMAGE_NAME}:${GITHUB_SHA}"
-          
-                    echo "Promoting ${NEW_IMAGE} to QA..."
-          
-                    awk -v new_image="$NEW_IMAGE" '
-                      BEGIN{done=0}
-                      {
-                        if(!done &&           =="image:"){
-                          match($0, /^[[:space:]]*/)
-                          indent=substr($0, RSTART, RLENGTH)
-                          print indent "image: " new_image
-                          done=1
-                        } else print
-                      }
-                    ' "$QA_FILE" > "$QA_FILE.tmp" && mv "$QA_FILE.tmp" "$QA_FILE"
-          
-                    git config user.name "github-actions[bot]"
-                    git config user.email "github-actions[bot]@users.noreply.github.com"
-                    git add deploy/qa/deployment.yaml
-                    
-                    if git diff --cached --quiet; then
-                      echo "QA already up to date."
-                      exit 0
-                    fi
-          
-                    git commit -m "chore(qa): auto-promote from dev ${GITHUB_SHA} [skip ci]"
-                    git pull --rebase origin main
-                    git push origin HEAD:main
-          
+          if git diff --cached --quiet; then
+            echo "QA already up to date."
+            exit 0
+          fi
+
+          git commit -m "chore(qa): auto-promote from dev ${GITHUB_SHA} [skip ci]"
+          git pull --rebase origin main
+          git push origin HEAD:main

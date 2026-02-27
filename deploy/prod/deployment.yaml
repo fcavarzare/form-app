@@ -40,8 +40,8 @@ spec:
           env:
             - name: DB_SERVER
               valueFrom:
-                configMapKeyRef:
-                  name: form-app-config
+                secretKeyRef:
+                  name: form-app-db
                   key: DB_SERVER
             - name: DB_USER
               valueFrom:
@@ -55,8 +55,8 @@ spec:
                   key: DB_PASSWORD
             - name: DB_NAME
               valueFrom:
-                configMapKeyRef:
-                  name: form-app-config
+                secretKeyRef:
+                  name: form-app-db
                   key: DB_NAME
           readinessProbe:
             httpGet:

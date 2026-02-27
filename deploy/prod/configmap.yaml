@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: form-app-config
-  namespace: form-app-prod
-data:
-  DB_SERVER: "db-prod.local"
-  DB_NAME: "form_db_prod"

@@ -10,11 +10,12 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - grafana-dev.local
-    - prometheus-dev.local
-    secretName: monitoring-dev-tls
+    - grafana.lab.local
+    - prometheus.lab.local
+    - alertmanager.lab.local
+    secretName: monitoring-tls
   rules:
-  - host: grafana-dev.local
+  - host: grafana.lab.local
     http:
       paths:
       - path: /
@@ -24,7 +25,7 @@ spec:
             name: kps-grafana
             port:
               number: 80
-  - host: prometheus-dev.local
+  - host: prometheus.lab.local
     http:
       paths:
       - path: /
@@ -34,3 +35,13 @@ spec:
             name: kps-kube-prometheus-stack-prometheus
             port:
               number: 9090
+  - host: alertmanager.lab.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kps-kube-prometheus-stack-alertmanager
+            port:
+              number: 9093

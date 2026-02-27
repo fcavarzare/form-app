@@ -1,0 +1,36 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: monitoring-ingress
+  namespace: monitoring
+  annotations:
+    cert-manager.io/cluster-issuer: "selfsigned-issuer"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - grafana-prod.local
+    - prometheus-prod.local
+    secretName: monitoring-prod-tls
+  rules:
+  - host: grafana-prod.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kps-grafana
+            port:
+              number: 80
+  - host: prometheus-prod.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kps-kube-prometheus-stack-prometheus
+            port:
+              number: 9090

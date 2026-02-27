@@ -1,31 +1,42 @@
-FROM python:3.11-alpine
+# Estágio 1: Builder (Compilação)
+FROM python:3.11-alpine AS builder
 
-# Instala dependências necessárias para o pymssql e runtime
+# Dependências de compilação necessárias para o pymssql
 RUN apk add --no-cache \
-    freetds \
-    libstdc++
-
-# Dependências apenas para compilação (removidas após o uso para diminuir a imagem)
-RUN apk add --no-cache --virtual .build-deps \
     gcc \
     python3-dev \
     musl-dev \
     freetds-dev \
     g++
 
-WORKDIR /app
+WORKDIR /install
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 
-# Remove as dependências de build para manter a imagem limpa e segura
-RUN apk del .build-deps
+# Instala as dependências em um diretório específico para facilitar a cópia
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
+# Estágio 2: Runtime (Final)
+FROM python:3.11-alpine
+
+# Instala apenas as bibliotecas de runtime necessárias
+RUN apk add --no-cache \
+    freetds \
+    libstdc++
+
+WORKDIR /app
+
+# Copia as bibliotecas instaladas do estágio builder
+COPY --from=builder /install /usr/local
+
+# Copia o código da aplicação
 COPY app.py .
 COPY templates ./templates
 
-# Cria um usuário sem privilégios para rodar a aplicação (Melhor Prática de Segurança)
-RUN adduser -D appuser
+# Cria um usuário sem privilégios e ajusta permissões
+RUN adduser -D appuser && \
+    chown -R appuser:appuser /app
+
 USER appuser
 
 EXPOSE 8000

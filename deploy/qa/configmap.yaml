@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: form-app-config
+  namespace: form-app-qa
+data:
+  DB_SERVER: "db-qa.local"
+  DB_NAME: "form_db_qa"
